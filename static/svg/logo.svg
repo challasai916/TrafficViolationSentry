@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">
+  <circle cx="50" cy="50" r="45" fill="#212529" stroke="#0d6efd" stroke-width="2" />
+  <g transform="translate(50, 50)">
+    <!-- Road -->
+    <rect x="-25" y="-5" width="50" height="35" fill="#495057" rx="2" ry="2" />
+    <rect x="-22" y="5" width="44" height="2" fill="#ffffff" />
+    <rect x="-22" y="15" width="44" height="2" fill="#ffffff" />
+    <rect x="-22" y="25" width="44" height="2" fill="#ffffff" />
+    
+    <!-- Camera/Eye -->
+    <circle cx="0" cy="-15" r="12" fill="#0d6efd" />
+    <circle cx="0" cy="-15" r="6" fill="#212529" />
+    <circle cx="2" cy="-17" r="2" fill="#ffffff" />
+    
+    <!-- Alert Triangle -->
+    <path d="M-22,-25 L-12,-10 L-32,-10 Z" fill="#ffc107" />
+    <text x="-22" y="-15" fill="#212529" font-family="Arial" font-weight="bold" font-size="10">!</text>
+    
+    <!-- Motorcycle -->
+    <circle cx="10" cy="20" r="6" fill="#6c757d" />
+    <circle cx="25" cy="20" r="6" fill="#6c757d" />
+    <path d="M5,15 L20,15 L25,20 L20,20" fill="none" stroke="#adb5bd" stroke-width="1.5" />
+    <path d="M10,15 L10,10" fill="none" stroke="#adb5bd" stroke-width="1.5" />
+    <circle cx="10" cy="7" r="3" fill="#dc3545" />
+  </g>
+</svg>

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traffic Violation Detection System</title>
+    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="text-center mb-4">
+                    <img src="{{ url_for('static', filename='svg/logo.svg') }}" alt="Traffic Violation Detection System" class="mb-3" width="80">
+                    <h1 class="display-5 fw-bold">Traffic Violation Detection System</h1>
+                    <p class="lead">Upload images or videos to detect traffic violations and receive email notifications</p>
+                </div>
+
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body">
+                        <h4 class="card-title"><i class="fas fa-exclamation-triangle text-warning"></i> Detectable Violations</h4>
+                        <div class="row mt-3">
+                            <div class="col-md-4">
+                                <div class="violation-type p-3 rounded mb-3">
+                                    <i class="fas fa-users text-danger fs-3 mb-2"></i>
+                                    <h5>Triple Riding</h5>
+                                    <p class="small text-muted">More than two riders on a two-wheeler</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="violation-type p-3 rounded mb-3">
+                                    <i class="fas fa-hard-hat text-danger fs-3 mb-2"></i>
+                                    <h5>Helmet Violation</h5>
+                                    <p class="small text-muted">Rider or passenger not wearing a helmet</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="violation-type p-3 rounded mb-3">
+                                    <i class="fas fa-mobile-alt text-danger fs-3 mb-2"></i>
+                                    <h5>Phone Usage</h5>
+                                    <p class="small text-muted">Rider using phone while riding</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h4 class="card-title mb-4"><i class="fas fa-upload"></i> Upload File for Analysis</h4>
+                        
+                        <form action="{{ url_for('upload_file') }}" method="post" enctype="multipart/form-data" id="uploadForm">
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">1. Select Input Type:</label>
+                                <div class="d-flex">
+                                    <div class="form-check me-4">
+                                        <input class="form-check-input" type="radio" name="inputType" id="imageInput" value="image" required>
+                                        <label class="form-check-label" for="imageInput">
+                                            <i class="fas fa-image"></i> Image
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="inputType" id="videoInput" value="video" required>
+                                        <label class="form-check-label" for="videoInput">
+                                            <i class="fas fa-video"></i> Video
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="fileUpload" class="form-label fw-bold">2. Upload File:</label>
+                                <div class="file-upload-wrapper">
+                                    <input type="file" class="form-control" id="fileUpload" name="file" required>
+                                    <p class="small text-muted mt-1">
+                                        Supported formats: .jpg, .jpeg, .png, .mp4, .avi, .mov<br>
+                                        Maximum file size: 16MB
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">3. Violation Detection:</label>
+                                <p>The system will analyze the uploaded file and detect traffic violations including triple riding, helmet violations, and phone usage.</p>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">4. Violation Notification:</label>
+                                <p>If violations are detected, an automatic notification will be sent to <strong>jabsmeher@gmail.com</strong> with the details.</p>
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary" id="submitBtn">
+                                    <i class="fas fa-search me-2"></i> Analyze for Violations
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Modal -->
+    <div class="modal fade" id="loadingModal" tabindex="-1" aria-labelledby="loadingModalLabel" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center p-5">
+                    <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <h5 id="loadingModalLabel">Processing Your File</h5>
+                    <p class="text-muted">This may take a few moments depending on the file size...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
