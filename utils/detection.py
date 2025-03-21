@@ -147,46 +147,90 @@ def analyze_violations(detected_objects):
     persons = [obj for obj in detected_objects if obj['class'] == 'person']
     
     # Check for triple riding (more than 2 persons on a motorcycle)
-    if len(motorcycles) > 0 and len(persons) > 2:
-        # Basic proximity checking to ensure persons are on the motorcycle
-        # This is a simplified approach - in a real system, this would be more sophisticated
+    if len(motorcycles) > 0 and len(persons) >= 3:
+        # Enhanced proximity checking to ensure persons are on the motorcycle
+        for motorcycle in motorcycles:
+            m_box = motorcycle['box']
+            m_center = (m_box[0] + m_box[2]//2, m_box[1] + m_box[3]//2)
+            m_area = m_box[2] * m_box[3]  # Area of the motorcycle bounding box
+            
+            # Improved counting method
+            persons_on_bike = []
+            for person in persons:
+                p_box = person['box']
+                p_center = (p_box[0] + p_box[2]//2, p_box[1] + p_box[3]//2)
+                p_area = p_box[2] * p_box[3]  # Area of person bounding box
+                
+                # Calculate distance between centers, normalized by motorcycle size
+                distance = ((p_center[0] - m_center[0])**2 + (p_center[1] - m_center[1])**2)**0.5
+                max_distance = max(m_box[2], m_box[3]) * 1.2  # Slightly reduced threshold
+                
+                # Calculate overlap between bounding boxes
+                x_overlap = max(0, min(m_box[0] + m_box[2], p_box[0] + p_box[2]) - max(m_box[0], p_box[0]))
+                y_overlap = max(0, min(m_box[1] + m_box[3], p_box[1] + p_box[3]) - max(m_box[1], p_box[1]))
+                overlap_area = x_overlap * y_overlap
+                
+                # Better proximity detection using both distance and overlap
+                if distance < max_distance or (overlap_area > 0 and overlap_area / p_area > 0.2):
+                    persons_on_bike.append(person)
+            
+            if len(persons_on_bike) >= 3:
+                violations.append("Triple Riding Detected")
+                break
+    
+    # Enhanced helmet violation detection
+    if len(motorcycles) > 0 and len(persons) > 0:
+        # Check for helmet violations by looking at the upper portion of riders
         for motorcycle in motorcycles:
             m_box = motorcycle['box']
             m_center = (m_box[0] + m_box[2]//2, m_box[1] + m_box[3]//2)
             
-            # Count persons near the motorcycle
-            persons_on_bike = 0
+            riders = []
             for person in persons:
                 p_box = person['box']
                 p_center = (p_box[0] + p_box[2]//2, p_box[1] + p_box[3]//2)
                 
-                # Calculate distance between centers
+                # Calculate distance
                 distance = ((p_center[0] - m_center[0])**2 + (p_center[1] - m_center[1])**2)**0.5
                 
-                # If person is close to motorcycle, count them
+                # If person is close to motorcycle, they are a rider
                 if distance < max(m_box[2], m_box[3]) * 1.5:
-                    persons_on_bike += 1
+                    riders.append(person)
             
-            if persons_on_bike > 2:
-                violations.append("Triple Riding Detected")
-                break
-    
-    # Simulate phone usage detection
-    # In a real system, this would require a more specialized model
-    for person in persons:
-        # Randomly simulate phone usage detection with a very low probability
-        # In a real system, this would be determined by a specific trained model
-        if np.random.random() < 0.05:  # Very low probability to avoid false positives
-            violations.append("Phone Usage While Riding Detected")
-            break
-    
-    # Simulate helmet violation detection
-    # In a real system, this would require a more specialized model
-    if len(motorcycles) > 0 and len(persons) > 0:
-        # Randomly simulate helmet violation with a low probability
-        # In a real system, this would be determined by a specific trained model
-        if np.random.random() < 0.1:  # Low probability to avoid false positives
-            violations.append("Helmet Violation Detected")
+            # If we found riders, check for helmets using a deterministic approach
+            if riders:
+                # Check for other objects that might be helmets (we would need a real helmet detector)
+                helmets_found = False
+                
+                # For demonstration purposes, we'll use a more deterministic approach
+                # In a real system, you would use a specialized helmet detection model
+                for rider in riders:
+                    rider_box = rider['box']
+                    
+                    # Check the upper 1/3 of the rider (where the head/helmet should be)
+                    head_height = rider_box[3] // 3
+                    head_region = (rider_box[0], rider_box[1], rider_box[2], head_height)
+                    
+                    # In a real system, this would analyze this region for helmet presence
+                    # For demo, we'll check if there's any other non-rider object near the head
+                    for obj in detected_objects:
+                        if obj not in riders and obj not in motorcycles:
+                            obj_box = obj['box']
+                            
+                            # Check for overlap with head region
+                            x_overlap = max(0, min(head_region[0] + head_region[2], obj_box[0] + obj_box[2]) - 
+                                          max(head_region[0], obj_box[0]))
+                            y_overlap = max(0, min(head_region[1] + head_region[3], obj_box[1] + obj_box[3]) - 
+                                          max(head_region[1], obj_box[1]))
+                            
+                            if x_overlap > 0 and y_overlap > 0:
+                                # Found a potential helmet
+                                helmets_found = True
+                                break
+                
+                # If not enough helmets for all riders, it's a violation
+                if not helmets_found and len(riders) > 0:
+                    violations.append("Helmet Violation Detected")
     
     return list(set(violations))  # Remove duplicates
 
